@@ -1,18 +1,19 @@
 import os, json
 from google import genai
-import google.generativeai as genai
 from google.api_core import exceptions
- 
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+from google.genai import types
 
 MODEL_NAME = "gemini-3.1-flash-lite-preview"
-model = genai.GenerativeModel(MODEL_NAME)
- 
+client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+
 async def ask_gemini_json(prompt: str) -> dict:
     try:
-        response = model.generate_content(
-            prompt,
-            generation_config={"response_mime_type": "application/json"}
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json"
+            )
         )
         return json.loads(response.text)
     except exceptions.ResourceExhausted as e:
@@ -21,18 +22,25 @@ async def ask_gemini_json(prompt: str) -> dict:
         raise Exception(f"Gemini API Error: {str(e)}")
  
 async def ask_gemini_text(prompt: str) -> str:
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model=MODEL_NAME,
+        contents=prompt
+        )
     return response.text
 
 async def ask_gemini_image(file_path: str) -> str:
-    response = model.generate_content(
+    response = client.models.generate_content(
         model="gemini-3-flash-preview",
-        contents=[genai.Client().files.upload(file=file_path), "Transcribe this image."],
+        contents=["Transcribe this image.",
+            client.files.upload(file=file_path)],
     )
     print(response.text)
  
 def stream_gemini(prompt: str):
     """Generator for SSE streaming responses."""
-    for chunk in model.generate_content(prompt, stream=True):
+    for chunk in client.models.generate_content(
+        model=MODEL_NAME,
+        contents=prompt, 
+        stream=True):
         if chunk.text:
             yield chunk.text

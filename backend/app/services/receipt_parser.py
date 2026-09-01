@@ -1,7 +1,8 @@
 import base64
-import json
-import google.generativeai as genai
+import os, json
+from google import genai
 from .gemini import ask_gemini_json
+from google.genai import types
 from app.utils.carbon_calc import calculate_total_from_items, get_emission_rating
 
 _PROMPT = """\
@@ -61,16 +62,19 @@ async def parse_receipt(text: str) -> dict:
 
 
 async def parse_receipt_image(image_bytes: bytes, content_type: str = "image/jpeg") -> dict:
-    model = genai.GenerativeModel("gemini-3.1-flash-lite-preview")
+    client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
     
-    image_part = {
-        "mime_type": content_type,
-        "data": image_bytes
-    }
+    image_part = types.Part.from_bytes(
+        data=image_bytes,
+        mime_type=content_type
+    )
 
-    response = model.generate_content(
+    response = client.models.generate_content(
+        model="gemini-3.1-flash-lite-preview",
         contents=[_IMAGE_PROMPT, image_part],
-        generation_config={"response_mime_type": "application/json"},
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json"
+        )
     )
 
     result = json.loads(response.text)
