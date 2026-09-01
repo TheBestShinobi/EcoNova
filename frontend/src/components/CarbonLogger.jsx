@@ -174,27 +174,36 @@ const CarbonLogger = () => {
               <span className="font-bold text-cosmic-pink">Rating:</span> {result.rating}
             </p>
             <h4 className="font-bold text-cosmic-pink mt-2">Items:</h4>
-            <ul className="list-disc list-inside">
+            <div>
               {result.items.map((item, index) => (
-                <li key={index} className="text-sm">
-                  {item.description}: {item.kg_co2} kg
-                  {item.sub_category && (
-                    <span className="text-cosmic-gray text-xs ml-2">
-                      ({item.category} › {item.sub_category})
-                    </span>
-                  )}
-                  {item.confidence && (
-                    <span className={`text-xs ml-2 ${
-                      item.confidence === 'high' ? 'text-cosmic-green' :
-                      item.confidence === 'medium' ? 'text-yellow-400' :
-                      'text-red-400'
-                    }`}>
-                      {item.confidence}
-                    </span>
-                  )}
-                </li>
+                <div key={index} className="flex items-start gap-2 text-sm">
+                  <span className="text-white mt-1.5">•</span>
+                  <div className="flex-1">
+                    <div>
+                      <span className="text-white">{item.description}</span>
+                      <span className="text-cosmic-gray ml-2">{item.kg_co2} kg</span>
+                      {item.sub_category && (
+                        <span className="text-cosmic-gray text-xs ml-2">
+                          ({item.category} › {item.sub_category})
+                        </span>
+                      )}
+                      {item.confidence && (
+                        <span className={`text-xs ml-2 ${
+                          item.confidence === 'high' ? 'text-cosmic-green' :
+                          item.confidence === 'medium' ? 'text-yellow-400' :
+                        'text-red-400'
+                        }`}>
+                          {item.confidence}
+                        </span>
+                      )}
+                    </div>
+                    {item.reasoning && (
+                      <ReasoningSection item={item} />
+                    )}
+                  </div>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
           <motion.button
             onClick={resetForm}
