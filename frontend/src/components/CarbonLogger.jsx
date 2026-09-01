@@ -2,6 +2,34 @@ import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { parseBank, parseReceiptImage, parseReceiptText } from '../api'
 
+const ReasoningSection = ({ item }) => {
+  const [isExpanded, setIsExpanded] = useState(false)
+  
+  if (!item.reasoning) return null
+  
+  return (
+    <div className="mt-1">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="text-xs text-cosmic-gray hover:text-cosmic-pinkLight transition-colors flex items-center gap-1"
+      >
+        <span>{isExpanded ? '▼' : '▶'}</span>
+        <span>Why this classification?</span>
+      </button>
+      {isExpanded && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className="mt-1 text-xs text-cosmic-lavenderLight bg-cosmic-deep/30 p-2 rounded border border-cosmic-pink/10"
+        >
+          {item.reasoning}
+        </motion.div>
+      )}
+    </div>
+  )
+}
+
 const CarbonLogger = () => {
   const [activeMode, setActiveMode] = useState('transaction') // 'transaction' or 'receipt'
   const [transactionData, setTransactionData] = useState({
@@ -122,6 +150,22 @@ const CarbonLogger = () => {
           <p className="text-cosmic-green font-medium">
             {activeMode === 'transaction' ? 'Transaction logged successfully!' : 'Receipt scanned & processed!'}
           </p>
+
+          {/* Category Summary */}
+          {result.category_summary && (
+            <div className="mt-4 text-left bg-cosmic-deep/50 p-4 rounded-lg">
+              <h4 className="font-bold text-cosmic-pink">Category Breakdown:</h4>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                {Object.entries(result.category_summary).map(([category, co2]) => (
+                  <div key={category} className="flex justify-between text-sm">
+                    <span className="text-cosmic-lavenderLight capitalize">{category}:</span>
+                    <span className="text-white">{co2.toFixed(2)} kg</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="text-cosmic-lavenderLight text-sm mt-4 text-left bg-cosmic-deep/50 p-4 rounded-lg font-mono">
             <p>
               <span className="font-bold text-cosmic-pink">Total CO2:</span> {result.total_kg_co2} kg
@@ -132,7 +176,23 @@ const CarbonLogger = () => {
             <h4 className="font-bold text-cosmic-pink mt-2">Items:</h4>
             <ul className="list-disc list-inside">
               {result.items.map((item, index) => (
-                <li key={index}>{item.description}: {item.kg_co2} kg</li>
+                <li key={index} className="text-sm">
+                  {item.description}: {item.kg_co2} kg
+                  {item.sub_category && (
+                    <span className="text-cosmic-gray text-xs ml-2">
+                      ({item.category} › {item.sub_category})
+                    </span>
+                  )}
+                  {item.confidence && (
+                    <span className={`text-xs ml-2 ${
+                      item.confidence === 'high' ? 'text-cosmic-green' :
+                      item.confidence === 'medium' ? 'text-yellow-400' :
+                      'text-red-400'
+                    }`}>
+                      {item.confidence}
+                    </span>
+                  )}
+                </li>
               ))}
             </ul>
           </div>
