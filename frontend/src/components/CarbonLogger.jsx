@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { parseBank, parseReceiptImage, parseReceiptText } from '../api'
 
@@ -13,6 +13,10 @@ const CarbonLogger = () => {
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState(null)
   const [result, setResult] = useState(null)
+
+  useEffect(() => {
+    resetForm()
+  }, [activeMode])
 
   const resetForm = () => {
     setSubmitted(false)
